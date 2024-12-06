@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <style>
+        .game-container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            max-width: 400px;
+            margin: 20px auto;
+        }
+
+        .card {
+            width: 80px;
+            height: 120px;
+            position: relative;
+            transform-style: preserve-3d;
+            transition: transform 0.5s;
+            cursor: pointer;
+        }
+
+        .card:hover {
+            transform: scale(1.05);
+        }
+
+        .card.flipped {
+            transform: rotateY(180deg);
+        }
+
+        .card-face {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            backface-visibility: hidden;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            border-radius: 8px;
+            user-select: none;
+        }
+
+        .front {
+            background: linear-gradient(45deg, #4a90e2, #357abd);
+            color: white;
+        }
+
+        .back {
+            background: #f0f0f0;
+            transform: rotateY(180deg);
+            border: 2px solid #ddd;
+        }
+
+        .score {
+            text-align: center;
+            font-size: 20px;
+            margin: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="score">マッチした数: <span id="matches">0</span></div>
+    <div class="game-container" id="gameContainer">
+    </div>
+
+    <script>
+        const symbols = ['★', '♠', '♥', '♦', '♣', '●', '▲', '■'];
+        const pairs = [...symbols, ...symbols];
+        let flippedCards = [];
+        let matchedPairs = 0;
+
+        function shuffle(array) {
+            for (let i = array.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [array[i], array[j]] = [array[j], array[i]];
+            }
+            return array;
+        }
+
+        function createCard(symbol, index) {
+            const card = document.createElement('div');
+            card.className = 'card';
+            card.innerHTML = `
+                <div class="card-face front">?</div>
+                <div class="card-face back">${symbol}</div>
+            `;
+            card.dataset.symbol = symbol;
+            card.dataset.index = index;
+            card.addEventListener('click', flipCard);
+            return card;
+        }
+
+        function flipCard() {
+            if (flippedCards.length === 2 || this.classList.contains('flipped') || this.classList.contains('matched')) {
+                return;
+            }
+
+            this.classList.add('flipped');
+            flippedCards.push(this);
+
+            if (flippedCards.length === 2) {
+                checkMatch();
+            }
+        }
+
+        function checkMatch() {
+            const [card1, card2] = flippedCards;
+            const match = card1.dataset.symbol === card2.dataset.symbol;
+
+            if (match) {
+                card1.classList.add('matched');
+                card2.classList.add('matched');
+                matchedPairs++;
+                document.getElementById('matches').textContent = matchedPairs;
+                if (matchedPairs === symbols.length) {
+                    setTimeout(() => alert('おめでとうございます！クリアしました！'), 500);
+                }
+            } else {
+                setTimeout(() => {
+                    card1.classList.remove('flipped');
+                    card2.classList.remove('flipped');
+                }, 1000);
+            }
+
+            flippedCards = [];
+        }
+
+        function initGame() {
+            const container = document.getElementById('gameContainer');
+            const shuffledPairs = shuffle(pairs);
+            shuffledPairs.forEach((symbol, index) => {
+                container.appendChild(createCard(symbol, index));
+            });
+        }
+
+        initGame();
+    </script>
+</body>
+</html>
